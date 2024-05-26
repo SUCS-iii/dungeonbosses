@@ -11,15 +11,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
-public class LivingDeathMixin {
-
+public class LivingDeathMixin
+{
     @Inject(method = "die", at = @At("RETURN"))
     private void onDeath(final DamageSource damageSource, final CallbackInfo ci)
     {
-        final BossCapability cap = ((BossCapEntity)(Object)this).getBossCap();
-        if (cap != null && cap.isBoss()) {
-            EventHandler.onBossDeath((LivingEntity)(Object)this, cap, damageSource);
+        if (this instanceof BossCapEntity entity)
+        {
+            final BossCapability cap = entity.getBossCap();
+            if (cap != null && cap.isBoss())
+            {
+                EventHandler.onBossDeath((LivingEntity) (Object) this, cap, damageSource);
+            }
         }
     }
-
 }
