@@ -229,31 +229,27 @@ public class SummonMobsGoal extends Goal
         {
             super.parse(jsonElement);
 
-            if (jsonElement.has(ENTITIES))
-            {
-                final Map<ResourceLocation, CompoundTag> entityData = new HashMap<>();
-                final List<EntityType<? extends LivingEntity>> types = new ArrayList<>();
+            final Map<ResourceLocation, CompoundTag> entityData = new HashMap<>();
+            final List<EntityType<? extends LivingEntity>> types = new ArrayList<>();
 
-                for (JsonElement entityEntry : jsonElement.get(ENTITIES).getAsJsonArray())
+            for (JsonElement entityEntry : jsonElement.get(ENTITIES).getAsJsonArray())
+            {
+                final ResourceLocation entityID = new ResourceLocation(((JsonObject) entityEntry).get(ENTITY_ID).getAsString());
+                types.add((EntityType<? extends LivingEntity>) BuiltInRegistries.ENTITY_TYPE.get(entityID));
+                if (((JsonObject) entityEntry).has(SUMM_ENTITY_NBT))
                 {
-                    final ResourceLocation entityID = new ResourceLocation(((JsonObject) entityEntry).get(ENTITY_ID).getAsString());
-                    types.add((EntityType<? extends LivingEntity>) BuiltInRegistries.ENTITY_TYPE.get(entityID));
-                    if (((JsonObject) entityEntry).has(SUMM_ENTITY_NBT))
+                    try
                     {
-                        try
-                        {
-                            entityData.put(entityID, TagParser.parseTag(((JsonObject) entityEntry).get(SUMM_ENTITY_NBT).getAsString()));
-                        }
-                        catch (CommandSyntaxException e)
-                        {
-                            throw new RuntimeException(e);
-                        }
+                        entityData.put(entityID, TagParser.parseTag(((JsonObject) entityEntry).get(SUMM_ENTITY_NBT).getAsString()));
+                    }
+                    catch (CommandSyntaxException e)
+                    {
+                        throw new RuntimeException(e);
                     }
                 }
-                entityIDs = types;
-                entityNBTData = entityData;
             }
-
+            entityIDs = types;
+            entityNBTData = entityData;
 
             if (jsonElement.has(SUMM_INTERVAL))
             {
