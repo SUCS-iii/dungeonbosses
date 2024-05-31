@@ -82,10 +82,16 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories{
+    mavenLocal()
+    flatDir { dirs 'libs' }
+    mavenCentral()
+
     maven {
         url "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
     }
-    mavenLocal()
 }
 
 mixin {
@@ -97,7 +103,7 @@ dependencies {
 
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
     compileOnly(("curse.maven:champions-307152:3694134"))
-    implementation fg.deobf("curse.maven:cupboard-326652:5156817")
+    implementation fg.deobf("com.cupboard:cupboard:1.20.1-2.6")
 }
 
 jar {
@@ -117,4 +123,10 @@ jar {
 
 jar.finalizedBy('reobfJar')
 
-
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact jar
+        }
+    }
+}

@@ -10,7 +10,7 @@ import net.minecraft.world.entity.player.Player;
 
 public interface ICommand
 {
-    static final int OP_PERM_LEVEL = 4;
+    static final int OP_PERM_LEVEL = 2;
 
     default LiteralArgumentBuilder<CommandSourceStack> build()
     {
