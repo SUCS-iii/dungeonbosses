@@ -6,6 +6,7 @@ import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import com.brutalbosses.event.EventHandler;
 import com.google.common.collect.ImmutableMap;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -48,10 +49,10 @@ public class BossType
      */
     private final ResourceLocation id;
 
-    private ImmutableMap<MobEffect, Integer>          potionMobEffects = ImmutableMap.of();
+    private ImmutableMap<Holder<MobEffect>, Integer>  potionMobEffects = ImmutableMap.of();
     private ImmutableMap<EquipmentSlot, ItemStack>    gearMap          = ImmutableMap.of();
     private ImmutableMap<ResourceLocation, IAIParams> aiData           = ImmutableMap.of();
-    private ImmutableMap<Attribute, Float>            attributes       = ImmutableMap.of();
+    private ImmutableMap<Holder<Attribute>, Float>    attributes       = ImmutableMap.of();
     private ImmutableMap<ResourceLocation, Integer>   spawnTables      = ImmutableMap.of();
     private ImmutableMap<String, Float>               customAttributes = ImmutableMap.of();
 
@@ -169,7 +170,7 @@ public class BossType
     {
         final float healthPct = boss.getHealth() / boss.getMaxHealth();
 
-        for (Map.Entry<Attribute, Float> attributeEntry : attributes.entrySet())
+        for (Map.Entry<Holder<Attribute>, Float> attributeEntry : attributes.entrySet())
         {
             if (boss.getAttributes().hasAttribute(attributeEntry.getKey()))
             {
@@ -185,14 +186,14 @@ public class BossType
             else
             {
                 BrutalBosses.LOGGER.debug(
-                  "Boss:" + id.toString() + " Attribute: " + attributeEntry.getKey().getDescriptionId() + " is not applicable to: " +
+                  "Boss:" + id.toString() + " Attribute: " + attributeEntry.getKey().value().getDescriptionId() + " is not applicable to: " +
                     entityToUse);
             }
         }
 
         boss.setHealth(boss.getMaxHealth() * healthPct);
 
-        for (final Map.Entry<MobEffect, Integer> MobEffectEntry : potionMobEffects.entrySet())
+        for (final Map.Entry<Holder<MobEffect>, Integer> MobEffectEntry : potionMobEffects.entrySet())
         {
             boss.getActiveEffectsMap().put(MobEffectEntry.getKey(), new MobEffectInstance(MobEffectEntry.getKey(), 10000000, MobEffectEntry.getValue()));
         }
@@ -253,7 +254,7 @@ public class BossType
      *
      * @param potionMobEffects
      */
-    public void setMobEffects(final ImmutableMap<MobEffect, Integer> potionMobEffects)
+    public void setMobEffects(final ImmutableMap<Holder<MobEffect>, Integer> potionMobEffects)
     {
         this.potionMobEffects = potionMobEffects;
     }
@@ -273,7 +274,7 @@ public class BossType
      *
      * @param attributes
      */
-    public void setAttributes(final ImmutableMap<Attribute, Float> attributes)
+    public void setAttributes(final ImmutableMap<Holder<Attribute>, Float> attributes)
     {
         this.attributes = attributes;
     }

@@ -20,7 +20,7 @@ import static com.brutalbosses.entity.CustomAttributes.ATTACK_SPEED;
  */
 public class MeleeShieldAttackGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:shieldmelee");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:shieldmelee");
 
     public MeleeShieldAttackGoal(Mob entity, double speed)
     {

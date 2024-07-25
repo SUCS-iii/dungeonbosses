@@ -3,12 +3,12 @@ package com.brutalbosses.network;
 import com.brutalbosses.BrutalBosses;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -19,18 +19,18 @@ import java.util.Random;
 /**
  * Message for vanilla particles around a citizen, in villager-like shape.
  */
-public class VanillaParticleMessage implements IMessage
+public class VanillaParticleMessage implements IMessage, CustomPacketPayload
 {
-
-    public static final  ResourceLocation ID             = new ResourceLocation(BrutalBosses.MOD_ID, "particlemsg");
-    private static final float            WIDTH          = 0.8f;
-    private static final float            CITIZEN_HEIGHT = 2;
+    public static final  CustomPacketPayload.Type<VanillaParticleMessage> TYPE           =
+      new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(BrutalBosses.MOD_ID, "particlemsg"));
+    private static final float                                            WIDTH          = 0.8f;
+    private static final float                                            CITIZEN_HEIGHT = 2;
     /**
      * Citizen Position
      */
-    private              double           x;
-    private              double           y;
-    private              double           z;
+    private              double                                           x;
+    private              double                                           y;
+    private              double                                           z;
 
     /**
      * Particle id
@@ -97,7 +97,7 @@ public class VanillaParticleMessage implements IMessage
     }
 
     @Override
-    public void handle(ClientPacketListener handler, Minecraft client)
+    public void handle(Minecraft client)
     {
         final ClientLevel world = Minecraft.getInstance().level;
         spawnParticles(type, world, x, y, z);
@@ -106,6 +106,12 @@ public class VanillaParticleMessage implements IMessage
     @Override
     public ResourceLocation getID()
     {
-        return ID;
+        return TYPE.id();
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type()
+    {
+        return TYPE;
     }
 }

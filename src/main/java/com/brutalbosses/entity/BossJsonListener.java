@@ -9,7 +9,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -156,30 +158,32 @@ public class BossJsonListener extends SimpleJsonResourceReloadListener implement
             }
 
             if (data.has(MobEffectS)) {
-                final ImmutableMap.Builder<MobEffect, Integer> MobEffects = ImmutableMap.<MobEffect, Integer>builder();
+                final ImmutableMap.Builder<Holder<MobEffect>, Integer> MobEffects = ImmutableMap.builder();
                 final JsonElement MobEffectData = data.get(MobEffectS);
 
-                for (final Map.Entry<String, JsonElement> MobEffectEntry : MobEffectData.getAsJsonObject().entrySet()) {
-                    final ResourceLocation MobEffectID = new ResourceLocation(MobEffectEntry.getKey());
-                    final MobEffect MobEffect = BuiltInRegistries.MOB_EFFECT.get(MobEffectID);
-                    if (MobEffect == null) {
-                        BrutalBosses.LOGGER.error("Bad MobEffect id:" + MobEffectID + " in:" + entry.getKey());
+                for (final Map.Entry<String, JsonElement> effectEntry : MobEffectData.getAsJsonObject().entrySet())
+                {
+                    final ResourceLocation effectId = ResourceLocation.tryParse(effectEntry.getKey());
+                    final Holder<MobEffect> effect = BuiltInRegistries.MOB_EFFECT.getHolder(effectId).get();
+                    if (effect == null)
+                    {
+                        BrutalBosses.LOGGER.error("Bad MobEffect id:" + effectId + " in:" + entry.getKey());
                         return null;
                     }
-                    MobEffects.put(MobEffect, MobEffectEntry.getValue().getAsInt());
+                    MobEffects.put(effect, effectEntry.getValue().getAsInt());
                 }
 
                 bossType.setMobEffects(MobEffects.build());
             }
 
             if (data.has(STATS)) {
-                final ImmutableMap.Builder<Attribute, Float> attributeModifiers = ImmutableMap.<Attribute, Float>builder();
+                final ImmutableMap.Builder<Holder<Attribute>, Float> attributeModifiers = ImmutableMap.builder();
                 final JsonElement MobEffectData = data.get(STATS);
 
                 for (final Map.Entry<String, JsonElement> statsEntry : MobEffectData.getAsJsonObject().entrySet()) {
-                    final Attribute attribute = BuiltInRegistries.ATTRIBUTE.get(new ResourceLocation(statsEntry.getKey()));
+                    final Holder<Attribute> attribute = BuiltInRegistries.ATTRIBUTE.getHolder(ResourceLocation.tryParse(statsEntry.getKey())).get();
                     if (attribute == null) {
-                        BrutalBosses.LOGGER.error("Bad attribute id:" + new ResourceLocation(statsEntry.getKey()) + " in:" + entry.getKey());
+                        BrutalBosses.LOGGER.error("Bad attribute id:" + ResourceLocation.tryParse(statsEntry.getKey()) + " in:" + entry.getKey());
                         continue;
                     }
 
@@ -209,27 +213,27 @@ public class BossJsonListener extends SimpleJsonResourceReloadListener implement
                 if (jsonEntry.isJsonObject()) {
                     final JsonObject gearData = jsonEntry.getAsJsonObject();
                     if (gearData.has(MAINHAND)) {
-                        gearList.put(EquipmentSlot.MAINHAND, ItemStack.of(TagParser.parseTag(gearData.get(MAINHAND).getAsString())));
+                        gearList.put(EquipmentSlot.MAINHAND, ItemStack.CODEC.parse(NbtOps.INSTANCE, (TagParser.parseTag(gearData.get(MAINHAND).getAsString()))).getOrThrow());
                     }
 
                     if (gearData.has(OFFHAND)) {
-                        gearList.put(EquipmentSlot.OFFHAND, ItemStack.of(TagParser.parseTag(gearData.get(OFFHAND).getAsString())));
+                        gearList.put(EquipmentSlot.OFFHAND, ItemStack.CODEC.parse(NbtOps.INSTANCE, (TagParser.parseTag(gearData.get(OFFHAND).getAsString()))).getOrThrow());
                     }
 
                     if (gearData.has(HELMET)) {
-                        gearList.put(EquipmentSlot.HEAD, ItemStack.of(TagParser.parseTag(gearData.get(HELMET).getAsString())));
+                        gearList.put(EquipmentSlot.HEAD, ItemStack.CODEC.parse(NbtOps.INSTANCE, (TagParser.parseTag(gearData.get(HELMET).getAsString()))).getOrThrow());
                     }
 
                     if (gearData.has(CHESTPLATE)) {
-                        gearList.put(EquipmentSlot.CHEST, ItemStack.of(TagParser.parseTag(gearData.get(CHESTPLATE).getAsString())));
+                        gearList.put(EquipmentSlot.CHEST, ItemStack.CODEC.parse(NbtOps.INSTANCE, TagParser.parseTag(gearData.get(CHESTPLATE).getAsString())).getOrThrow());
                     }
 
                     if (gearData.has(LEGGINGS)) {
-                        gearList.put(EquipmentSlot.LEGS, ItemStack.of(TagParser.parseTag(gearData.get(LEGGINGS).getAsString())));
+                        gearList.put(EquipmentSlot.LEGS, ItemStack.CODEC.parse(NbtOps.INSTANCE, (TagParser.parseTag(gearData.get(LEGGINGS).getAsString()))).getOrThrow());
                     }
 
                     if (gearData.has(FEET)) {
-                        gearList.put(EquipmentSlot.FEET, ItemStack.of(TagParser.parseTag(gearData.get(FEET).getAsString())));
+                        gearList.put(EquipmentSlot.FEET, ItemStack.CODEC.parse(NbtOps.INSTANCE, (TagParser.parseTag(gearData.get(FEET).getAsString()))).getOrThrow());
                     }
                 }
 
@@ -241,7 +245,7 @@ public class BossJsonListener extends SimpleJsonResourceReloadListener implement
                 final JsonElement aiData = data.get(AI);
 
                 for (final Map.Entry<String, JsonElement> aiEntry : aiData.getAsJsonObject().entrySet()) {
-                    final ResourceLocation aiID = new ResourceLocation(aiEntry.getKey());
+                    final ResourceLocation aiID = ResourceLocation.tryParse(aiEntry.getKey());
                     if (!BossTypeManager.instance.aiCreatorRegistry.containsKey(aiID)) {
                         BrutalBosses.LOGGER.error("Unkown AI id:" + aiID + " in:" + entry.getKey());
                         continue;
@@ -265,7 +269,7 @@ public class BossJsonListener extends SimpleJsonResourceReloadListener implement
                 final JsonElement spawnLootableData = data.get(SPAWNCHESTTABLES);
 
                 for (final Map.Entry<String, JsonElement> spawnLootTableEntry : spawnLootableData.getAsJsonObject().entrySet()) {
-                    final ResourceLocation lootTableID = new ResourceLocation(spawnLootTableEntry.getKey());
+                    final ResourceLocation lootTableID = ResourceLocation.tryParse(spawnLootTableEntry.getKey());
                     spawnMap.put(lootTableID, spawnLootTableEntry.getValue().getAsInt());
                 }
 

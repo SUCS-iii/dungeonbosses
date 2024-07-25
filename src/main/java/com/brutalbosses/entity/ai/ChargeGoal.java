@@ -19,9 +19,10 @@ import net.minecraft.world.level.pathfinder.Path;
  */
 public class ChargeGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:charge");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:charge");
 
-    private static final AttributeModifier speedMod = new AttributeModifier("brutalbosses:speedbuff", 2, AttributeModifier.Operation.MULTIPLY_TOTAL);
+    private static final AttributeModifier speedMod =
+      new AttributeModifier(ResourceLocation.tryParse("brutalbosses:speedbuff"), 2, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 
     private final Mob          mob;
     private       ChargeParams params;
@@ -74,7 +75,7 @@ public class ChargeGoal extends Goal
                 isCharging = true;
                 ticksToNextUpdate = (int) params.duration;
 
-                if (!mob.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedMod))
+                if (!mob.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedMod.id()))
                 {
                     mob.getAttribute(Attributes.MOVEMENT_SPEED).addTransientModifier(speedMod);
                 }

@@ -11,6 +11,7 @@ import com.brutalbosses.network.BossTypeSyncMessage;
 import com.brutalbosses.network.Network;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -158,7 +159,7 @@ public class EventHandler
                   .withParameter(LootContextParams.THIS_ENTITY, damageSource.getEntity())
                   .withLuck(((ServerPlayer) damageSource.getEntity()).getLuck()).create(LootContextParamSets.CHEST);
 
-                final LootTable loottable = entity.level().getServer().getLootData().getLootTable(cap.getLootTable());
+                final LootTable loottable = entity.level().getServer().reloadableRegistries().get().registry(Registries.LOOT_TABLE).get().get(cap.getLootTable());
                 final List<ItemStack> list = loottable.getRandomItems(params);
 
                 if (list.isEmpty())

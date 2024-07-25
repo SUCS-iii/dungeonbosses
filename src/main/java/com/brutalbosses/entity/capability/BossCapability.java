@@ -26,7 +26,7 @@ public class BossCapability {
     private final static String ZSPAWN = "spZ";
     private final static String SHOWBOSSBAR = "shb";
 
-    public static ResourceLocation ID = new ResourceLocation(BrutalBosses.MOD_ID, "bosscap");
+    public static ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BrutalBosses.MOD_ID, "bosscap");
 
     public BossCapability(final Entity entity) {
         this.entity = entity;
@@ -73,10 +73,10 @@ public class BossCapability {
         final String nameSpace = compoundNbt.getString(NAMESPACE);
         final String path = compoundNbt.getString(KEY);
 
-        final ResourceLocation id = new ResourceLocation(nameSpace, path);
+        final ResourceLocation id = ResourceLocation.fromNamespaceAndPath(nameSpace, path);
 
         if (compoundNbt.contains(LTKEY) && compoundNbt.contains(LTNAMESPACE)) {
-            lootTable = new ResourceLocation(compoundNbt.get(LTKEY).getAsString(), compoundNbt.get(LTNAMESPACE).getAsString());
+            lootTable = ResourceLocation.fromNamespaceAndPath(compoundNbt.get(LTKEY).getAsString(), compoundNbt.get(LTNAMESPACE).getAsString());
         }
 
         if (compoundNbt.contains(XSPAWN)) {

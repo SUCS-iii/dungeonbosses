@@ -31,7 +31,7 @@ import java.util.*;
  */
 public class SummonMobsGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:summonmobs");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:summonmobs");
 
     private final Mob          mob;
     private       LivingEntity target = null;
@@ -234,7 +234,7 @@ public class SummonMobsGoal extends Goal
 
             for (JsonElement entityEntry : jsonElement.get(ENTITIES).getAsJsonArray())
             {
-                final ResourceLocation entityID = new ResourceLocation(((JsonObject) entityEntry).get(ENTITY_ID).getAsString());
+                final ResourceLocation entityID = ResourceLocation.tryParse(((JsonObject) entityEntry).get(ENTITY_ID).getAsString());
                 types.add((EntityType<? extends LivingEntity>) BuiltInRegistries.ENTITY_TYPE.get(entityID));
                 if (((JsonObject) entityEntry).has(SUMM_ENTITY_NBT))
                 {

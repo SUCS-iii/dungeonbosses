@@ -282,6 +282,7 @@ public abstract class SimpleRangedAttackGoal extends Goal
      */
     protected void positionProjectile(final Projectile Projectile, final int number)
     {
+        // TODO: Projectiles do not show while preparing, either renderer or actual pos issues, I guess renderer
         if (params.count == 1)
         {
             final Direction dir = PosUtil.getFacing(mob.position(), target.position()).getClockWise();
@@ -300,8 +301,8 @@ public abstract class SimpleRangedAttackGoal extends Goal
 
         Vec3 offSet = new Vec3(xzRatio * dir.getStepX(), -y, xzRatio * dir.getStepZ());
 
-        center.add(offSet);
-        center.add(new Vec3(dir.getCounterClockWise().getStepX() * 0.5, 0, dir.getCounterClockWise().getStepZ() * 0.5));
+        center = center.add(offSet);
+        center = center.add(new Vec3(dir.getCounterClockWise().getStepX() * 0.5, 0, dir.getCounterClockWise().getStepZ() * 0.5));
         Projectile.setPos(center.x, center.y, center.z);
     }
 

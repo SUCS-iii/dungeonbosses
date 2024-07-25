@@ -11,7 +11,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.codec.StreamCodec;
 
 @Environment(EnvType.CLIENT)
 public class BrutalBossesClient implements ClientModInitializer
@@ -22,37 +24,15 @@ public class BrutalBossesClient implements ClientModInitializer
     {
         EntityRendererRegistry.register(ModEntities.THROWN_ITEMC, manager -> new CSpriteRenderer(manager, Minecraft.getInstance().getItemRenderer(), 1.0f, true));
 
-        ClientPlayNetworking.registerGlobalReceiver(BossCapMessage.ID, (client, handler, buf, responseSender) -> {
-            final BossCapMessage message = new BossCapMessage().read(buf);
-            client.execute(catchErrorsFor(() -> {
-                // Everything in this lambda is run on the render thread
-                message.handle(handler, client);
-            }));
-        });
+        PayloadTypeRegistry.playS2C().register(BossCapMessage.TYPE, StreamCodec.of((buf, msg) -> msg.write(buf), byteBuf -> new BossCapMessage().read(byteBuf)));
+        PayloadTypeRegistry.playS2C().register(BossOverlayMessage.TYPE, StreamCodec.of((buf, msg) -> msg.write(buf), byteBuf -> new BossOverlayMessage().read(byteBuf)));
+        PayloadTypeRegistry.playS2C().register(BossTypeSyncMessage.TYPE, StreamCodec.of((buf, msg) -> msg.write(buf), byteBuf -> new BossTypeSyncMessage().read(byteBuf)));
+        PayloadTypeRegistry.playS2C().register(VanillaParticleMessage.TYPE, StreamCodec.of((buf, msg) -> msg.write(buf), byteBuf -> new VanillaParticleMessage().read(byteBuf)));
 
-        ClientPlayNetworking.registerGlobalReceiver(BossOverlayMessage.ID, (client, handler, buf, responseSender) -> {
-            BossOverlayMessage message = new BossOverlayMessage().read(buf);
-            client.execute(catchErrorsFor(() -> {
-                // Everything in this lambda is run on the render thread
-                message.handle(handler, client);
-            }));
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(BossTypeSyncMessage.ID, (client, handler, buf, responseSender) -> {
-            BossTypeSyncMessage message = new BossTypeSyncMessage().read(buf);
-            client.execute(catchErrorsFor(() -> {
-                // Everything in this lambda is run on the render thread
-                message.handle(handler, client);
-            }));
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(VanillaParticleMessage.ID, (client, handler, buf, responseSender) -> {
-            VanillaParticleMessage message = new VanillaParticleMessage().read(buf);
-            client.execute(catchErrorsFor(() -> {
-                // Everything in this lambda is run on the render thread
-                message.handle(handler, client);
-            }));
-        });
+        ClientPlayNetworking.registerGlobalReceiver(BossCapMessage.TYPE, (msg, context) -> context.client().execute(catchErrorsFor(() -> msg.handle(context.client()))));
+        ClientPlayNetworking.registerGlobalReceiver(BossOverlayMessage.TYPE, (msg, context) -> context.client().execute(catchErrorsFor(() -> msg.handle(context.client()))));
+        ClientPlayNetworking.registerGlobalReceiver(BossTypeSyncMessage.TYPE, (msg, context) -> context.client().execute(catchErrorsFor(() -> msg.handle(context.client()))));
+        ClientPlayNetworking.registerGlobalReceiver(VanillaParticleMessage.TYPE, (msg, context) -> context.client().execute(catchErrorsFor(() -> msg.handle(context.client()))));
     }
 
     private Runnable catchErrorsFor(final Runnable runnable)

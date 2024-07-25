@@ -39,15 +39,15 @@ public class BossTypeManager
     {
 
 
-        registerAI(new ResourceLocation("minecraft:randomwalk"),
+        registerAI(ResourceLocation.tryParse("minecraft:randomwalk"),
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new RandomStrollGoal((PathfinderMob) entity, 0.8d, 20)),
           null);
 
-        registerAI(new ResourceLocation("minecraft:meleeattack"),
+        registerAI(ResourceLocation.tryParse("minecraft:meleeattack"),
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new MeleeAttackGoal((PathfinderMob) entity, 1.0d, true)),
           null);
 
-        registerAI(new ResourceLocation("minecraft:crossbow"),
+        registerAI(ResourceLocation.tryParse("minecraft:crossbow"),
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000,
             new RangedCrossbowAttackGoal<>((Monster & RangedAttackMob & CrossbowAttackMob) entity, 1.0d, 30)),
           null);
@@ -56,7 +56,7 @@ public class BossTypeManager
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2001, new MeleeShieldAttackGoal((Mob) entity, 1.0d)),
           null);
 
-        registerAI(new ResourceLocation("minecraft:target"),
+        registerAI(ResourceLocation.tryParse("minecraft:target"),
           (entity, params) -> ((Mob) entity).targetSelector.addGoal(-2000, new NearestAttackableTargetGoal<>((Mob) entity, Player.class, true)),
           null);
 
@@ -92,10 +92,6 @@ public class BossTypeManager
           SummonMobsGoal.SummonParams::new);
 
         registerAI(WhirlWind.ID,
-          (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new WhirlWind((Mob) entity, params)),
-          WhirlWind.WhirldWindParams::new);
-
-        registerAI(new ResourceLocation("brutalbosses:whirldwind"),
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new WhirlWind((Mob) entity, params)),
           WhirlWind.WhirldWindParams::new);
 
@@ -143,7 +139,7 @@ public class BossTypeManager
 
         for (int i = 1; i < 5; i++)
         {
-            final ResourceLocation additionalID = new ResourceLocation(ID.getNamespace(), ID.getPath() + i);
+            final ResourceLocation additionalID = ResourceLocation.fromNamespaceAndPath(ID.getNamespace(), ID.getPath() + i);
             aiRegistry.put(additionalID, aiCreator);
             if (paramsParser != null)
             {
@@ -160,7 +156,7 @@ public class BossTypeManager
      */
     public void afterLoad()
     {
-        final ImmutableSet.Builder<ResourceLocation> entityTypes = ImmutableSet.<ResourceLocation>builder();
+        final ImmutableSet.Builder<ResourceLocation> entityTypes = ImmutableSet.builder();
         final HashMap<ResourceLocation, List<BossType>> tempSpawns = new HashMap<>();
 
         for (final BossType bossType : bosses.values())
@@ -180,10 +176,10 @@ public class BossTypeManager
 
         this.entityTypes = entityTypes.build();
 
-        final ImmutableMap.Builder<ResourceLocation, List<BossType>> spawnMap = ImmutableMap.<ResourceLocation, List<BossType>>builder();
+        final ImmutableMap.Builder<ResourceLocation, List<BossType>> spawnMap = ImmutableMap.builder();
         for (final Map.Entry<ResourceLocation, List<BossType>> entry : tempSpawns.entrySet())
         {
-            final ImmutableList.Builder<BossType> bossList = ImmutableList.<BossType>builder();
+            final ImmutableList.Builder<BossType> bossList = ImmutableList.builder();
             bossList.addAll(entry.getValue());
             spawnMap.put(entry.getKey(), bossList.build());
         }

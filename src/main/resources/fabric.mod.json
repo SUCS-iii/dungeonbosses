@@ -32,9 +32,9 @@
   "depends": {
     "fabricloader": ">=0.11.3",
     "fabric": "*",
-    "cupboard": ">=1.20.1-2.5",
-    "minecraft": "1.20.x",
-    "java": ">=17"
+    "cupboard": "*",
+    "minecraft": "1.21.x",
+    "java": ">=21"
   },
   "suggests": {
     "another-mod": "*"

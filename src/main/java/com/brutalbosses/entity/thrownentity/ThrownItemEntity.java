@@ -2,9 +2,7 @@ package com.brutalbosses.entity.thrownentity;
 
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.ModEntities;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -22,7 +20,7 @@ import net.minecraft.world.level.Level;
  */
 public class ThrownItemEntity extends ThrowableItemProjectile
 {
-    public static  ResourceLocation          ID           = new ResourceLocation(BrutalBosses.MOD_ID, "thrownitem");
+    public static ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BrutalBosses.MOD_ID, "thrownitem");
     private static EntityDataAccessor<Float> DATA_VSSCALE = SynchedEntityData.defineId(ThrownItemEntity.class, EntityDataSerializers.FLOAT);
 
     /**
@@ -36,10 +34,10 @@ public class ThrownItemEntity extends ThrowableItemProjectile
         noCulling = true;
     }
 
-    protected void defineSynchedData()
+    protected void defineSynchedData(SynchedEntityData.Builder builder)
     {
-        super.defineSynchedData();
-        this.getEntityData().define(DATA_VSSCALE, 1.0f);
+        builder.define(DATA_VSSCALE, 1.0f);
+        super.defineSynchedData(builder);
     }
 
     public void onSyncedDataUpdated(EntityDataAccessor<?> dataParameter)
@@ -48,6 +46,17 @@ public class ThrownItemEntity extends ThrowableItemProjectile
         if (dataParameter == DATA_VSSCALE)
         {
             this.scale = getEntityData().get(DATA_VSSCALE);
+        }
+    }
+
+    @Override
+    public void tick()
+    {
+        super.tick();
+// TODO: REmove dbebug
+        if (random.nextInt(5) == 0 && level().isClientSide)
+        {
+            level().addParticle(ParticleTypes.ANGRY_VILLAGER, getX(), getY(), getZ(), 0, 0, 0);
         }
     }
 
@@ -61,12 +70,6 @@ public class ThrownItemEntity extends ThrowableItemProjectile
     protected Item getDefaultItem()
     {
         return Items.ACACIA_DOOR;
-    }
-
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket()
-    {
-        return new ClientboundAddEntityPacket(this);
     }
 
     public float getScale()

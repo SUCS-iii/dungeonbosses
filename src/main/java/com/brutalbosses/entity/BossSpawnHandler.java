@@ -29,7 +29,7 @@ public class BossSpawnHandler
      */
     public static void onChestPlaced(final ServerLevelAccessor world, final RandomizableContainerBlockEntity chest)
     {
-        List<BossType> possibleBosses = BossTypeManager.instance.lootTableSpawnEntries.get(chest.lootTable);
+        List<BossType> possibleBosses = BossTypeManager.instance.lootTableSpawnEntries.get(chest.lootTable.location());
         if (possibleBosses != null && !possibleBosses.isEmpty())
         {
             if (BrutalBosses.rand.nextInt(100) > BrutalBosses.config.getCommonConfig().globalBossSpawnChance)
@@ -100,7 +100,7 @@ public class BossSpawnHandler
 
             if (chest != null)
             {
-                final ResourceLocation lootTable = chest.lootTable;
+                final ResourceLocation lootTable = chest.lootTable.location();
                 BrutalBosses.LOGGER.debug(
                   "Spawning " + bossType.getID() + " at " + pos + " at " + chest.getDisplayName().getString() + " with:" + lootTable);
             }
@@ -118,7 +118,7 @@ public class BossSpawnHandler
 
             if (chest != null)
             {
-                ((BossCapEntity) boss).getBossCap().setLootTable(chest.lootTable);
+                ((BossCapEntity) boss).getBossCap().setLootTable(chest.lootTable.location());
             }
             ((BossCapEntity) boss).getBossCap().setSpawnPos(pos);
 

@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -24,7 +25,7 @@ import net.minecraft.world.phys.EntityHitResult;
 
 public class ItemThrowAttackGoal extends SimpleRangedAttackGoal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:itemshootgoal");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:itemshootgoal");
 
     public ItemThrowAttackGoal(final Mob mob, final IAIParams params)
     {
@@ -214,7 +215,7 @@ public class ItemThrowAttackGoal extends SimpleRangedAttackGoal
             {
                 try
                 {
-                    item = ItemStack.of(TagParser.parseTag(jsonElement.get(ITEM).getAsString()));
+                    item = ItemStack.CODEC.parse(NbtOps.INSTANCE, TagParser.parseTag(jsonElement.get(ITEM).getAsString())).getOrThrow();
                 }
                 catch (CommandSyntaxException e)
                 {

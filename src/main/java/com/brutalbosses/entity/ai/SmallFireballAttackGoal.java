@@ -7,10 +7,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.SmallFireball;
+import net.minecraft.world.phys.Vec3;
 
 public class SmallFireballAttackGoal extends SimpleRangedAttackGoal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:shootfireballs");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:shootfireballs");
 
     public SmallFireballAttackGoal(final Mob mob, final IAIParams params)
     {
@@ -35,13 +36,11 @@ public class SmallFireballAttackGoal extends SimpleRangedAttackGoal
 
         final SmallFireball fireballEntity = new SmallFireball(mob.level(),
           mob,
-          xDiff + mob.getRandom().nextGaussian() * (double) distVariance,
+          new Vec3(xDiff + mob.getRandom().nextGaussian() * (double) distVariance,
           yDiff,
-          zDiff + mob.getRandom().nextGaussian() * (double) distVariance);
+            zDiff + mob.getRandom().nextGaussian() * (double) distVariance));
 
-        fireballEntity.xPower *= params.speed;
-        fireballEntity.yPower *= params.speed;
-        fireballEntity.zPower *= params.speed;
+        fireballEntity.accelerationPower *= params.speed;
 
         fireballEntity.setPos(mob.getX(), mob.getY() + mob.getEyeHeight() - 0.5, mob.getZ());
         fireballEntity.setOwner(mob);
@@ -54,9 +53,7 @@ public class SmallFireballAttackGoal extends SimpleRangedAttackGoal
     {
         final SmallFireball fireballEntity = new SmallFireball(mob.level(),
           mob,
-          0,
-          0,
-          0);
+          Vec3.ZERO);
         ((IOnProjectileHit) fireballEntity).setMaxLifeTime(mob.level().getGameTime() + 20 * 40);
         return fireballEntity;
     }

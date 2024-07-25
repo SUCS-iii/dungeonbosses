@@ -66,7 +66,7 @@ public class CommandSpawnBoss implements Opcommand
                 return 0;
             }
 
-            final ResourceLocation bossID = new ResourceLocation("brutalbosses", bossName);
+            final ResourceLocation bossID = ResourceLocation.fromNamespaceAndPath("brutalbosses", bossName);
             final BossType bossType = BossTypeManager.instance.bosses.get(bossID);
             if (bossType == null)
             {

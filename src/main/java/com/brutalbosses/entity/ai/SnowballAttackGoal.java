@@ -14,7 +14,7 @@ import net.minecraft.world.phys.EntityHitResult;
 
 public class SnowballAttackGoal extends SimpleRangedAttackGoal
 {
-    public static final ResourceLocation ID = new ResourceLocation("brutalbosses:shootsnowballs");
+    public static final ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:shootsnowballs");
 
     private static final double AIM_HEIGHT                     = 2.0D;
     private static final double ARROW_SPEED                    = 1.0D;

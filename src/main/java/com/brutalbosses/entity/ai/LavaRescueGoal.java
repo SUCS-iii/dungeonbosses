@@ -12,7 +12,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 
 public class LavaRescueGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:lavarescue");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:lavarescue");
 
     int inLavaTicks = 0;
     int counter     = 0;

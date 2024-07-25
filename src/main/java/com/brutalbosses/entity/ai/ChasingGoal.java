@@ -16,7 +16,7 @@ import java.util.EnumSet;
  */
 public class ChasingGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:chasetarget");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:chasetarget");
 
     private final Mob          mob;
     private       float        chaseDist;
