@@ -282,7 +282,6 @@ public abstract class SimpleRangedAttackGoal extends Goal
      */
     protected void positionProjectile(final Projectile Projectile, final int number)
     {
-        // TODO: Projectiles do not show while preparing, either renderer or actual pos issues, I guess renderer
         if (params.count == 1)
         {
             final Direction dir = PosUtil.getFacing(mob.position(), target.position()).getClockWise();

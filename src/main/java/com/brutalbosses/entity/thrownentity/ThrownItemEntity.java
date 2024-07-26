@@ -2,7 +2,6 @@ package com.brutalbosses.entity.thrownentity;
 
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.ModEntities;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -46,17 +45,6 @@ public class ThrownItemEntity extends ThrowableItemProjectile
         if (dataParameter == DATA_VSSCALE)
         {
             this.scale = getEntityData().get(DATA_VSSCALE);
-        }
-    }
-
-    @Override
-    public void tick()
-    {
-        super.tick();
-// TODO: REmove dbebug
-        if (random.nextInt(5) == 0 && level().isClientSide)
-        {
-            level().addParticle(ParticleTypes.ANGRY_VILLAGER, getX(), getY(), getZ(), 0, 0, 0);
         }
     }
 
