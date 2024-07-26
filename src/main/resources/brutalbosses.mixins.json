@@ -10,6 +10,7 @@
     "LivingEntityDamageMixin",
     "LockableLootTileEntityMixin",
     "MeleeAttackGoalMixin",
+    "MeleeReachMixin",
     "PlayerListMixin",
     "ProjectileHitActionMixin",
     "ServerPlayerGameModeMixin",

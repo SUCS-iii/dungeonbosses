@@ -7,3 +7,5 @@ accessible class net/minecraft/world/entity/monster/SpellcasterIllager$IllagerSp
 accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
 accessible field net/minecraft/world/entity/Entity dimensions Lnet/minecraft/world/entity/EntityDimensions;
 accessible field net/minecraft/client/gui/components/BossHealthOverlay events Ljava/util/Map;
+accessible class net/minecraft/world/level/block/entity/BlockEntity$DataComponentInput
+accessible method net/minecraft/world/entity/LivingEntity getHitbox ()Lnet/minecraft/world/phys/AABB;
