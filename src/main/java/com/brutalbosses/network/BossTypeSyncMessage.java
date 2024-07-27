@@ -6,18 +6,19 @@ import com.brutalbosses.entity.BossTypeManager;
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.function.Supplier;
 
-public class BossTypeSyncMessage implements IMessage
+public class BossTypeSyncMessage implements IMessage, CustomPacketPayload
 {
-    private Collection<BossType> bossTypes = new HashSet<>();
+    public static final CustomPacketPayload.Type<BossTypeSyncMessage> TYPE      =
+      new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(BrutalBosses.MODID, "bosstypes"));
+    private             Collection<BossType>                          bossTypes = new HashSet<>();
 
     public BossTypeSyncMessage(final Collection<BossType> values)
     {
@@ -56,23 +57,26 @@ public class BossTypeSyncMessage implements IMessage
     }
 
     @Override
-    public void handle(final Supplier<NetworkEvent.Context> contextSupplier)
+    public void handle(Player player)
     {
-        if (contextSupplier.get().getDirection() != NetworkDirection.PLAY_TO_CLIENT)
+        final ImmutableMap.Builder<ResourceLocation, BossType> bossTypesImm = ImmutableMap.builder();
+        for (final BossType type : bossTypes)
         {
-            BrutalBosses.LOGGER.error("Boss capability message sent to the wrong side!", new Exception());
-        }
-        else
-        {
-            final ImmutableMap.Builder<ResourceLocation, BossType> bossTypesImm = ImmutableMap.<ResourceLocation, BossType>builder();
-            for (final BossType type : bossTypes)
-            {
-                bossTypesImm.put(type.getID(), type);
-            }
-
-            BossTypeManager.instance.bosses = bossTypesImm.build();
+            bossTypesImm.put(type.getID(), type);
         }
 
-        contextSupplier.get().setPacketHandled(true);
+        BossTypeManager.instance.bosses = bossTypesImm.build();
+    }
+
+    @Override
+    public ResourceLocation getID()
+    {
+        return TYPE.id();
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type()
+    {
+        return TYPE;
     }
 }

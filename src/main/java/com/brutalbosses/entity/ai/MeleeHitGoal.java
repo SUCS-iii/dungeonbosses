@@ -2,10 +2,12 @@ package com.brutalbosses.entity.ai;
 
 import com.brutalbosses.BrutalBosses;
 import com.google.gson.JsonObject;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,14 +15,13 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Simple melee hit goal, simply hits its target
  */
 public class MeleeHitGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:meleehit");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:meleehit");
 
     private final Mob            mob;
     private       LivingEntity   target = null;
@@ -74,15 +75,11 @@ public class MeleeHitGoal extends Goal
             {
                 damage += mob.getAttributeValue(Attributes.ATTACK_DAMAGE);
             }
-            damage += EnchantmentHelper.getDamageBonus(mob.getMainHandItem(), target.getMobType());
+
+            damage += EnchantmentHelper.modifyDamage((ServerLevel) mob.level(), mob.getMainHandItem(), target, mob.damageSources().mobAttack(mob), damage);
 
             if (target.hurt(mob.damageSources().mobAttack(mob), damage))
             {
-                int fireAspect = EnchantmentHelper.getFireAspect(mob);
-                if (fireAspect > 0)
-                {
-                    target.setSecondsOnFire(fireAspect * 4);
-                }
                 if (params.onHitMobEffect != null)
                 {
                     target.addEffect(new MobEffectInstance(params.onHitMobEffect, params.potionduration, params.potionlevel));
@@ -93,13 +90,18 @@ public class MeleeHitGoal extends Goal
                 {
                     knockBack += (float) mob.getAttributeValue(Attributes.ATTACK_KNOCKBACK);
                 }
-                knockBack += (float) EnchantmentHelper.getKnockbackBonus(mob);
+                knockBack = EnchantmentHelper.modifyKnockback((ServerLevel) mob.level(), mob.getMainHandItem(), target, mob.damageSources().mobAttack(mob), knockBack);
+
                 if (knockBack > 0.0F)
                 {
                     target.knockback(knockBack * 0.5F, Mth.sin(mob.getYRot() * ((float) Math.PI / 180F)), (-Mth.cos(mob.getYRot() * ((float) Math.PI / 180F))));
                 }
 
-                mob.doEnchantDamageEffects(mob, target);
+                if (mob.level() instanceof ServerLevel serverlevel1)
+                {
+                    EnchantmentHelper.doPostAttackEffects(serverlevel1, target, mob.damageSources().mobAttack(mob));
+                }
+
                 mob.setLastHurtMob(target);
             }
         }
@@ -107,13 +109,13 @@ public class MeleeHitGoal extends Goal
 
     public static class MeleeHitParams extends IAIParams.DefaultParams
     {
-        private float     attackDistance = 2f;
-        private float     extraDamage    = 2f;
-        private MobEffect onHitMobEffect = null;
-        private float     knockback      = 0f;
-        private int       cooldown       = 30;
-        private int       potionlevel    = 1;
-        private int       potionduration = 60;
+        private float             attackDistance = 2f;
+        private float             extraDamage    = 2f;
+        private Holder<MobEffect> onHitMobEffect = null;
+        private float             knockback      = 0f;
+        private int               cooldown       = 30;
+        private int               potionlevel    = 1;
+        private int               potionduration = 60;
 
         public MeleeHitParams(final JsonObject jsonData)
         {
@@ -166,8 +168,8 @@ public class MeleeHitGoal extends Goal
 
             if (jsonElement.has(POTION))
             {
-                final ResourceLocation MobEffectID = new ResourceLocation(jsonElement.get(POTION).getAsString());
-                onHitMobEffect = ForgeRegistries.MOB_EFFECTS.getValue(MobEffectID);
+                final ResourceLocation MobEffectID = ResourceLocation.tryParse(jsonElement.get(POTION).getAsString());
+                onHitMobEffect = BuiltInRegistries.MOB_EFFECT.getHolder(MobEffectID).get();
             }
             return this;
         }

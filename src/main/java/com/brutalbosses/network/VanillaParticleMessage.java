@@ -6,39 +6,42 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Random;
-import java.util.function.Supplier;
 
 /**
  * Message for vanilla particles around a citizen, in villager-like shape.
  */
-public class VanillaParticleMessage implements IMessage
+public class VanillaParticleMessage implements IMessage, CustomPacketPayload
 {
-    private static final float  WIDTH          = 0.8f;
-    private static final float  CITIZEN_HEIGHT = 2;
+    public static final  CustomPacketPayload.Type<VanillaParticleMessage> TYPE           =
+      new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(BrutalBosses.MODID, "particlemsg"));
+    private static final float                                            WIDTH          = 0.8f;
+    private static final float                                            CITIZEN_HEIGHT = 2;
     /**
      * Citizen Position
      */
-    private              double x;
-    private              double y;
-    private              double z;
+    private              double                                           x;
+    private              double                                           y;
+    private              double                                           z;
 
     /**
      * Particle id
      */
     private SimpleParticleType type;
 
-    public VanillaParticleMessage() {super();}
+    public VanillaParticleMessage()
+    {
+        super();
+    }
 
     public VanillaParticleMessage(final double x, final double y, final double z, final SimpleParticleType type)
     {
@@ -81,30 +84,34 @@ public class VanillaParticleMessage implements IMessage
         buffer.writeDouble(x);
         buffer.writeDouble(y);
         buffer.writeDouble(z);
-        buffer.writeResourceLocation(ForgeRegistries.PARTICLE_TYPES.getKey(this.type));
+        buffer.writeResourceLocation(BuiltInRegistries.PARTICLE_TYPE.getKey(this.type));
     }
 
     @Override
-    public IMessage read(final FriendlyByteBuf buffer)
+    public VanillaParticleMessage read(final FriendlyByteBuf buffer)
     {
         x = buffer.readDouble();
         y = buffer.readDouble();
         z = buffer.readDouble();
-        this.type = (SimpleParticleType) ForgeRegistries.PARTICLE_TYPES.getValue(buffer.readResourceLocation());
+        this.type = (SimpleParticleType) BuiltInRegistries.PARTICLE_TYPE.get(buffer.readResourceLocation());
         return this;
     }
 
-    @OnlyIn(Dist.CLIENT)
     @Override
-    public void handle(final Supplier<NetworkEvent.Context> contextSupplier)
+    public void handle(Player player)
     {
-        if (contextSupplier.get().getDirection() != NetworkDirection.PLAY_TO_CLIENT)
-        {
-            BrutalBosses.LOGGER.error("Boss capability message sent to the wrong side!", new Exception());
-            return;
-        }
-        final ClientLevel world = Minecraft.getInstance().level;
+        spawnParticles(type, player.level, x, y, z);
+    }
 
-        spawnParticles(type, world, x, y, z);
+    @Override
+    public ResourceLocation getID()
+    {
+        return TYPE.id();
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type()
+    {
+        return TYPE;
     }
 }

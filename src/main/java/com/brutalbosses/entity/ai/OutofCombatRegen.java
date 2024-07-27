@@ -11,7 +11,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
  */
 public class OutofCombatRegen extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:aftercombatregen");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:aftercombatregen");
 
     private final Mob   mob;
     private final float amount;

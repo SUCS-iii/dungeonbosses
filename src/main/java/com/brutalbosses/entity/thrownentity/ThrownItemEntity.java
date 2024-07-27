@@ -2,8 +2,7 @@ package com.brutalbosses.entity.thrownentity;
 
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.ModEntities;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -14,14 +13,13 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkHooks;
 
 /**
  * Custom thrown item entity
  */
 public class ThrownItemEntity extends ThrowableItemProjectile
 {
-    public static  ResourceLocation          ID           = new ResourceLocation(BrutalBosses.MODID, "thrownitem");
+    public static ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BrutalBosses.MODID, "thrownitem");
     private static EntityDataAccessor<Float> DATA_VSSCALE = SynchedEntityData.defineId(ThrownItemEntity.class, EntityDataSerializers.FLOAT);
 
     /**
@@ -29,16 +27,16 @@ public class ThrownItemEntity extends ThrowableItemProjectile
      */
     private float scale = 1.0f;
 
-    public ThrownItemEntity(final EntityType<? extends ThrowableItemProjectile> type, final Level world)
+    public ThrownItemEntity(EntityType<ThrownItemEntity> type, final Level world)
     {
-        super(type, world);
+        super((EntityType<ThrownItemEntity>) (Object) type, world);
         noCulling = true;
     }
 
-    protected void defineSynchedData()
+    protected void defineSynchedData(SynchedEntityData.Builder builder)
     {
-        super.defineSynchedData();
-        this.getEntityData().define(DATA_VSSCALE, 1.0f);
+        builder.define(DATA_VSSCALE, 1.0f);
+        super.defineSynchedData(builder);
     }
 
     public void onSyncedDataUpdated(EntityDataAccessor<?> dataParameter)
@@ -52,7 +50,7 @@ public class ThrownItemEntity extends ThrowableItemProjectile
 
     public ThrownItemEntity(final Level level, final Mob mob)
     {
-        super(ModEntities.THROWN_ITEMC, mob, level);
+        super((EntityType<? extends ThrowableItemProjectile>) (Object) ModEntities.THROWN_ITEMC, mob, level);
         noCulling = true;
     }
 
@@ -60,12 +58,6 @@ public class ThrownItemEntity extends ThrowableItemProjectile
     protected Item getDefaultItem()
     {
         return Items.ACACIA_DOOR;
-    }
-
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket()
-    {
-        return NetworkHooks.getEntitySpawningPacket(this);
     }
 
     public float getScale()

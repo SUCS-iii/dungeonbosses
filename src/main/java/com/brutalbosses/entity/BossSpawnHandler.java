@@ -1,7 +1,7 @@
 package com.brutalbosses.entity;
 
 import com.brutalbosses.BrutalBosses;
-import com.brutalbosses.compat.Compat;
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.cupboard.util.BlockSearch;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -13,12 +13,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import static com.brutalbosses.entity.capability.BossCapability.BOSS_CAP;
 
 public class BossSpawnHandler
 {
@@ -32,7 +29,7 @@ public class BossSpawnHandler
      */
     public static void onChestPlaced(final ServerLevelAccessor world, final RandomizableContainerBlockEntity chest)
     {
-        List<BossType> possibleBosses = BossTypeManager.instance.lootTableSpawnEntries.get(chest.lootTable);
+        List<BossType> possibleBosses = BossTypeManager.instance.lootTableSpawnEntries.get(chest.lootTable.location());
         if (possibleBosses != null && !possibleBosses.isEmpty())
         {
             if (BrutalBosses.rand.nextInt(100) > BrutalBosses.config.getCommonConfig().globalBossSpawnChance)
@@ -84,7 +81,7 @@ public class BossSpawnHandler
      *
      * @param world
      */
-    public static void spawnBoss(final ServerLevelAccessor world, final BlockPos pos, final BossType bossType, @Nullable final RandomizableContainerBlockEntity chest)
+    public static void spawnBoss(final ServerLevelAccessor world, final BlockPos pos, final BossType bossType, final RandomizableContainerBlockEntity chest)
     {
         try
         {
@@ -103,7 +100,7 @@ public class BossSpawnHandler
 
             if (chest != null)
             {
-                final ResourceLocation lootTable = chest.lootTable;
+                final ResourceLocation lootTable = chest.lootTable.location();
                 BrutalBosses.LOGGER.debug(
                   "Spawning " + bossType.getID() + " at " + pos + " at " + chest.getDisplayName().getString() + " with:" + lootTable);
             }
@@ -121,11 +118,9 @@ public class BossSpawnHandler
 
             if (chest != null)
             {
-                boss.getCapability(BOSS_CAP).orElse(null).setLootTable(chest.lootTable);
+                ((BossCapEntity) boss).getBossCap().setLootTable(chest.lootTable.location());
             }
-            boss.getCapability(BOSS_CAP).orElse(null).setSpawnPos(pos);
-
-            Compat.applyAllCompats(world, bossType, pos, boss);
+            ((BossCapEntity) boss).getBossCap().setSpawnPos(pos);
 
             if (!boss.isRemoved())
             {

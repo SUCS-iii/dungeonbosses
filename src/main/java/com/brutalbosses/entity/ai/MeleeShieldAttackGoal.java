@@ -2,7 +2,7 @@ package com.brutalbosses.entity.ai;
 
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.BossType;
-import com.brutalbosses.entity.capability.BossCapability;
+import com.brutalbosses.entity.capability.BossCapEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,15 +20,15 @@ import static com.brutalbosses.entity.CustomAttributes.ATTACK_SPEED;
  */
 public class MeleeShieldAttackGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:shieldmelee");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:shieldmelee");
 
     public MeleeShieldAttackGoal(Mob entity, double speed)
     {
         this.mob = entity;
         this.speedModifier = speed;
         this.followingTargetEvenIfNotSeen = true;
-        this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK, Goal.Flag.TARGET));
-        bossType = mob.getCapability(BossCapability.BOSS_CAP).orElse(null).getBossType();
+        this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK, Flag.TARGET));
+        bossType = ((BossCapEntity) mob).getBossCap().getBossType();
         attackInterval = bossType.getCustomAttributeValueOrDefault(ATTACK_SPEED, 1);
     }
 

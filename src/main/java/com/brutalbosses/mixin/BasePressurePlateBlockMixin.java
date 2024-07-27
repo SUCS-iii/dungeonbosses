@@ -1,5 +1,6 @@
 package com.brutalbosses.mixin;
 
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -21,9 +22,9 @@ public class BasePressurePlateBlockMixin
     @Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)
     public void on(BlockState state, Level world, BlockPos pos, Entity entity, CallbackInfo ca)
     {
-        if (entity instanceof LivingEntity)
+        if (entity instanceof BossCapEntity capEntity)
         {
-            final BossCapability cap = entity.getCapability(BossCapability.BOSS_CAP).orElse(null);
+            final BossCapability cap = capEntity.getBossCap();
             if (cap != null)
             {
                 if (cap.isBoss())

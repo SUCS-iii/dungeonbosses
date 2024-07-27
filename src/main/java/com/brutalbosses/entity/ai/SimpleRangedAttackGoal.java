@@ -3,6 +3,7 @@ package com.brutalbosses.entity.ai;
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.IOnProjectileHit;
 import com.brutalbosses.entity.PosUtil;
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import com.google.gson.JsonObject;
 import net.minecraft.core.Direction;
@@ -24,6 +25,7 @@ import java.util.List;
 
 public abstract class SimpleRangedAttackGoal extends Goal
 {
+
     protected final Mob                 mob;
     protected       LivingEntity        target;
     protected       int                 attackTime         = -1;
@@ -41,7 +43,7 @@ public abstract class SimpleRangedAttackGoal extends Goal
     public SimpleRangedAttackGoal(Mob mob, final IAIParams params)
     {
         this.mob = mob;
-        cap = mob.getCapability(BossCapability.BOSS_CAP).orElse(null);
+        cap = ((BossCapEntity) mob).getBossCap();
         this.params = (RangedParams) params;
         this.speedModifier = 1.0f;
         this.attackIntervalMin = (this.params.interval - 10);

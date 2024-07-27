@@ -5,7 +5,8 @@
   "refmap": "brutalbosses.refmap.json",
   "mixins": [
     "BasePressurePlateBlockMixin",
-    "EntityCapReader",
+    "BossCapMixin",
+    "PiglinMixin",
     "LockableLootTileEntityMixin",
     "MeleeAttackGoalMixin",
     "PlayerInteractDistScaling",

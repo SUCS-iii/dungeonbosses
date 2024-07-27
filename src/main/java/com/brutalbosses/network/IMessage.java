@@ -1,15 +1,17 @@
 package com.brutalbosses.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 
-import java.util.function.Supplier;
-
-public interface IMessage
+public interface IMessage extends CustomPacketPayload
 {
     void write(FriendlyByteBuf buffer);
 
     IMessage read(FriendlyByteBuf buffer);
 
-    void handle(Supplier<NetworkEvent.Context> contextSupplier);
+    void handle(Player player);
+
+    public ResourceLocation getID();
 }

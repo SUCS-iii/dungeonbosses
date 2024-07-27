@@ -2,8 +2,12 @@ package com.brutalbosses.entity;
 
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.ai.IAIParams;
+import com.brutalbosses.entity.capability.BossCapEntity;
+import com.brutalbosses.entity.capability.BossCapability;
 import com.brutalbosses.event.EventHandler;
 import com.google.common.collect.ImmutableMap;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -18,19 +22,18 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Iterator;
 import java.util.Map;
 
 import static com.brutalbosses.entity.CustomAttributes.REMOVESPELLAI;
-import static com.brutalbosses.entity.capability.BossCapability.BOSS_CAP;
 
 /**
  * Represents one boss type
  */
 public class BossType
 {
+
     /**
      * The bosses entity used
      */
@@ -46,10 +49,10 @@ public class BossType
      */
     private final ResourceLocation id;
 
-    private ImmutableMap<MobEffect, Integer>          potionMobEffects = ImmutableMap.of();
+    private ImmutableMap<Holder<MobEffect>, Integer> potionMobEffects = ImmutableMap.of();
     private ImmutableMap<EquipmentSlot, ItemStack>    gearMap          = ImmutableMap.of();
     private ImmutableMap<ResourceLocation, IAIParams> aiData           = ImmutableMap.of();
-    private ImmutableMap<Attribute, Float>            attributes       = ImmutableMap.of();
+    private ImmutableMap<Holder<Attribute>, Float>   attributes       = ImmutableMap.of();
     private ImmutableMap<ResourceLocation, Integer>   spawnTables      = ImmutableMap.of();
     private ImmutableMap<String, Float>               customAttributes = ImmutableMap.of();
 
@@ -94,10 +97,6 @@ public class BossType
             }
             else
             {
-                if (creationData.contains("ForgeCaps", 10) && entity instanceof IEntityCapReader)
-                {
-                    ((IEntityCapReader) entity).readCapsFrom(creationData.getCompound("ForgeCaps"));
-                }
                 if (entity instanceof LivingEntity)
                 {
                     ((LivingEntity) entity).readAdditionalSaveData(creationData);
@@ -105,13 +104,14 @@ public class BossType
             }
         }
 
-        if (!(entity instanceof Mob))
+        if (!(entity instanceof BossCapEntity))
         {
-            BrutalBosses.LOGGER.warn("Not supported boss entity:" + ForgeRegistries.ENTITY_TYPES.getKey(entityToUse));
+            BrutalBosses.LOGGER.warn("Not supported boss entity:" + entityToUse);
             return null;
         }
 
-        entity.getCapability(BOSS_CAP).orElse(null).setBossType(this);
+        ((BossCapEntity) entity).setBossCap(new BossCapability(entity));
+        ((BossCapEntity) entity).getBossCap().setBossType(this);
         initForEntity((Mob) entity);
         return (Mob) entity;
     }
@@ -157,7 +157,7 @@ public class BossType
 
         if (protectsTreasure)
         {
-            EventHandler.protectedBlocks.put(boss.getCapability(BOSS_CAP).orElse(null).getSpawnPos(), boss.getUUID());
+            EventHandler.protectedBlocks.put(((BossCapEntity) boss).getBossCap().getSpawnPos(), boss.getUUID());
         }
     }
 
@@ -170,7 +170,7 @@ public class BossType
     {
         final float healthPct = boss.getHealth() / boss.getMaxHealth();
 
-        for (Map.Entry<Attribute, Float> attributeEntry : attributes.entrySet())
+        for (Map.Entry<Holder<Attribute>, Float> attributeEntry : attributes.entrySet())
         {
             if (boss.getAttributes().hasAttribute(attributeEntry.getKey()))
             {
@@ -186,14 +186,14 @@ public class BossType
             else
             {
                 BrutalBosses.LOGGER.debug(
-                  "Boss:" + id.toString() + " Attribute: " + attributeEntry.getKey().getDescriptionId() + " is not applicable to: " + ForgeRegistries.ENTITY_TYPES.getKey(
-                    entityToUse));
+                  "Boss:" + id.toString() + " Attribute: " + attributeEntry.getKey().value().getDescriptionId() + " is not applicable to: " +
+                    entityToUse);
             }
         }
 
         boss.setHealth(boss.getMaxHealth() * healthPct);
 
-        for (final Map.Entry<MobEffect, Integer> MobEffectEntry : potionMobEffects.entrySet())
+        for (final Map.Entry<Holder<MobEffect>, Integer> MobEffectEntry : potionMobEffects.entrySet())
         {
             boss.getActiveEffectsMap().put(MobEffectEntry.getKey(), new MobEffectInstance(MobEffectEntry.getKey(), 10000000, MobEffectEntry.getValue()));
         }
@@ -224,7 +224,7 @@ public class BossType
     {
         if (customAttributes.containsKey(REMOVESPELLAI) && boss instanceof Mob)
         {
-            for (final Iterator<WrappedGoal> iterator = ((Mob) boss).goalSelector.availableGoals.iterator(); iterator.hasNext(); )
+            for (final Iterator<WrappedGoal> iterator = ((Mob) boss).goalSelector.getAvailableGoals().iterator(); iterator.hasNext(); )
             {
                 final WrappedGoal goal = iterator.next();
                 if (goal.getGoal() instanceof SpellcasterIllager.SpellcasterUseSpellGoal)
@@ -254,7 +254,7 @@ public class BossType
      *
      * @param potionMobEffects
      */
-    public void setMobEffects(final ImmutableMap<MobEffect, Integer> potionMobEffects)
+    public void setMobEffects(final ImmutableMap<Holder<MobEffect>, Integer> potionMobEffects)
     {
         this.potionMobEffects = potionMobEffects;
     }
@@ -274,7 +274,7 @@ public class BossType
      *
      * @param attributes
      */
-    public void setAttributes(final ImmutableMap<Attribute, Float> attributes)
+    public void setAttributes(final ImmutableMap<Holder<Attribute>, Float> attributes)
     {
         this.attributes = attributes;
     }
@@ -434,7 +434,7 @@ public class BossType
     {
         final CompoundTag CompoundTag = new CompoundTag();
         CompoundTag.putString("id", id.toString());
-        CompoundTag.putString("etype", ForgeRegistries.ENTITY_TYPES.getKey(entityToUse).toString());
+        CompoundTag.putString("etype", BuiltInRegistries.ENTITY_TYPE.getKey(entityToUse).toString());
         CompoundTag.putFloat("scale", scale);
 
 
@@ -450,9 +450,9 @@ public class BossType
     {
         final ResourceLocation id = ResourceLocation.tryParse(CompoundTag.getString("id"));
         final ResourceLocation entity = ResourceLocation.tryParse(CompoundTag.getString("etype"));
-        final EntityType type = ForgeRegistries.ENTITY_TYPES.getValue(entity);
+        final EntityType type = BuiltInRegistries.ENTITY_TYPE.get(entity);
 
-        if (type == null)
+        if (type == null || BuiltInRegistries.ENTITY_TYPE.getKey(type).equals(BuiltInRegistries.ENTITY_TYPE.getDefaultKey()))
         {
             return null;
         }

@@ -7,10 +7,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.WitherSkull;
+import net.minecraft.world.phys.Vec3;
 
 public class WitherSkullAttackGoal extends SimpleRangedAttackGoal
 {
-    public static final ResourceLocation ID = new ResourceLocation("brutalbosses:shootwitherskulls");
+    public static final ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:shootwitherskulls");
 
     public WitherSkullAttackGoal(final Mob mob, final IAIParams params)
     {
@@ -26,7 +27,7 @@ public class WitherSkullAttackGoal extends SimpleRangedAttackGoal
     @Override
     protected Projectile createProjectile()
     {
-        WitherSkull witherskullentity = new WitherSkull(mob.level(), mob, 0, 0, 0);
+        WitherSkull witherskullentity = new WitherSkull(mob.level(), mob, Vec3.ZERO);
         return witherskullentity;
     }
 
@@ -40,10 +41,8 @@ public class WitherSkullAttackGoal extends SimpleRangedAttackGoal
         double zDiff = target.getZ() - Projectile.getZ();
 
 
-        final WitherSkull witherskullentity = new WitherSkull(mob.level(), mob, xDiff, yDiff, zDiff);
-        witherskullentity.xPower *= params.speed;
-        witherskullentity.yPower *= params.speed;
-        witherskullentity.zPower *= params.speed;
+        final WitherSkull witherskullentity = new WitherSkull(mob.level(), mob, new Vec3(xDiff, yDiff, zDiff));
+        witherskullentity.accelerationPower *= params.speed;
         witherskullentity.setOwner(mob);
         if (((WitherSkullParams) params).dangerous)
         {

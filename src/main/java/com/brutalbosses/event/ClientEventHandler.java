@@ -1,13 +1,14 @@
 package com.brutalbosses.event;
 
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.EntityHitResult;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,13 +55,13 @@ public class ClientEventHandler
     {
         // Clear any boss infos to avoid storing entities/Levels
         bossInfoMap.clear();
-        Minecraft.getInstance().gui.getBossOverlay().events.clear();
+        Minecraft.getInstance().gui.getBossOverlay().reset();
     }
 
     @SubscribeEvent()
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event)
+    public static void onPlayerTick(PlayerTickEvent.Post event)
     {
-        if (!event.player.level().isClientSide() || event.player.level().getGameTime() % 5 != 0)
+        if (!event.getEntity().level().isClientSide() || event.getEntity().level().getGameTime() % 5 != 0)
         {
             return;
         }
@@ -83,9 +84,9 @@ public class ClientEventHandler
             }
             else
             {
-                if (event.player.hasLineOfSight(entry.getKey()))
+                if (event.getEntity().hasLineOfSight(entry.getKey()))
                 {
-                    entry.getValue().timeOut = event.player.level().getGameTime() + 20 * 30;
+                    entry.getValue().timeOut = event.getEntity().level().getGameTime() + 20 * 30;
                 }
             }
         }
@@ -107,9 +108,9 @@ public class ClientEventHandler
 
     public static void checkEntity(final Entity target)
     {
-        if (target instanceof LivingEntity)
+        if (target instanceof BossCapEntity)
         {
-            final BossCapability cap = target.getCapability(BossCapability.BOSS_CAP).orElse(null);
+            final BossCapability cap = ((BossCapEntity) target).getBossCap();
             if (cap != null && cap.isBoss() && cap.getBossType().showBossBar())
             {
                 if (bossInfoMap.containsKey(target))

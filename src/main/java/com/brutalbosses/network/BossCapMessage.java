@@ -1,18 +1,19 @@
 package com.brutalbosses.network;
 
 import com.brutalbosses.BrutalBosses;
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
 
-import java.util.function.Supplier;
-
-public class BossCapMessage implements IMessage
+public class BossCapMessage implements IMessage, CustomPacketPayload
 {
+    public static final CustomPacketPayload.Type<BossCapMessage> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(BrutalBosses.MODID, "bosscap"));
     BossCapability cap = null;
 
     private int         entityID = -1;
@@ -44,24 +45,25 @@ public class BossCapMessage implements IMessage
     }
 
     @Override
-    public void handle(final Supplier<NetworkEvent.Context> contextSupplier)
+    public void handle(final Player player)
     {
-        if (contextSupplier.get().getDirection() != NetworkDirection.PLAY_TO_CLIENT)
+        final Entity entity = player.level().getEntity(entityID);
+        if (entity instanceof BossCapEntity)
         {
-            BrutalBosses.LOGGER.error("Boss capability message sent to the wrong side!", new Exception());
+            ((BossCapEntity) entity).setBossCap(new BossCapability(entity));
+            ((BossCapEntity) entity).getBossCap().deserializeNBT(nbt);
         }
-        else
-        {
-            Minecraft.getInstance().execute(() ->
-            {
-                final Entity entity = Minecraft.getInstance().player.level().getEntity(entityID);
-                if (entity != null)
-                {
-                    entity.getCapability(BossCapability.BOSS_CAP).orElse(null).deserializeNBT(nbt);
-                }
-            });
-        }
+    }
 
-        contextSupplier.get().setPacketHandled(true);
+    @Override
+    public ResourceLocation getID()
+    {
+        return TYPE.id();
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type()
+    {
+        return TYPE;
     }
 }

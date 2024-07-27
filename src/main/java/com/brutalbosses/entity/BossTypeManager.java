@@ -2,11 +2,11 @@ package com.brutalbosses.entity;
 
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.ai.*;
-import com.brutalbosses.entity.capability.BossCapability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonObject;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
@@ -19,10 +19,7 @@ import net.minecraft.world.entity.monster.CrossbowAttackMob;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -42,15 +39,15 @@ public class BossTypeManager
     {
 
 
-        registerAI(new ResourceLocation("minecraft:randomwalk"),
+        registerAI(ResourceLocation.tryParse("minecraft:randomwalk"),
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new RandomStrollGoal((PathfinderMob) entity, 0.8d, 20)),
           null);
 
-        registerAI(new ResourceLocation("minecraft:meleeattack"),
+        registerAI(ResourceLocation.tryParse("minecraft:meleeattack"),
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new MeleeAttackGoal((PathfinderMob) entity, 1.0d, true)),
           null);
 
-        registerAI(new ResourceLocation("minecraft:crossbow"),
+        registerAI(ResourceLocation.tryParse("minecraft:crossbow"),
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000,
             new RangedCrossbowAttackGoal<>((Monster & RangedAttackMob & CrossbowAttackMob) entity, 1.0d, 30)),
           null);
@@ -59,7 +56,7 @@ public class BossTypeManager
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2001, new MeleeShieldAttackGoal((Mob) entity, 1.0d)),
           null);
 
-        registerAI(new ResourceLocation("minecraft:target"),
+        registerAI(ResourceLocation.tryParse("minecraft:target"),
           (entity, params) -> ((Mob) entity).targetSelector.addGoal(-2000, new NearestAttackableTargetGoal<>((Mob) entity, Player.class, true)),
           null);
 
@@ -98,10 +95,6 @@ public class BossTypeManager
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new WhirlWind((Mob) entity, params)),
           WhirlWind.WhirldWindParams::new);
 
-        registerAI(new ResourceLocation("brutalbosses:whirldwind"),
-          (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new WhirlWind((Mob) entity, params)),
-          WhirlWind.WhirldWindParams::new);
-
         registerAI(MeleeHitGoal.ID,
           (entity, params) -> ((Mob) entity).goalSelector.addGoal(-2000, new MeleeHitGoal((Mob) entity, params)),
           MeleeHitGoal.MeleeHitParams::new);
@@ -130,7 +123,7 @@ public class BossTypeManager
      * @param aiCreator
      * @param paramsParser
      */
-    public void registerAI(ResourceLocation ID, BiConsumer<Entity, IAIParams> aiCreator, @Nullable Function<JsonObject, IAIParams> paramsParser)
+    public void registerAI(ResourceLocation ID, BiConsumer<Entity, IAIParams> aiCreator, Function<JsonObject, IAIParams> paramsParser)
     {
         final ImmutableMap.Builder<ResourceLocation, BiConsumer<Entity, IAIParams>> aiRegistry = ImmutableMap.builder();
         final ImmutableMap.Builder<ResourceLocation, Function<JsonObject, IAIParams>> aiSupplier = ImmutableMap.<ResourceLocation, Function<JsonObject, IAIParams>>builder();
@@ -146,7 +139,7 @@ public class BossTypeManager
 
         for (int i = 1; i < 5; i++)
         {
-            final ResourceLocation additionalID = new ResourceLocation(ID.getNamespace(), ID.getPath() + i);
+            final ResourceLocation additionalID = ResourceLocation.fromNamespaceAndPath(ID.getNamespace(), ID.getPath() + i);
             aiRegistry.put(additionalID, aiCreator);
             if (paramsParser != null)
             {
@@ -163,13 +156,13 @@ public class BossTypeManager
      */
     public void afterLoad()
     {
-        final ImmutableSet.Builder<ResourceLocation> entityTypes = ImmutableSet.<ResourceLocation>builder();
+        final ImmutableSet.Builder<ResourceLocation> entityTypes = ImmutableSet.builder();
         final HashMap<ResourceLocation, List<BossType>> tempSpawns = new HashMap<>();
 
         for (final BossType bossType : bosses.values())
         {
-            entityTypes.add(ForgeRegistries.ENTITY_TYPES.getKey(bossType.getEntityType()));
-            BrutalBosses.LOGGER.info("Loaded boss variant for: " + ForgeRegistries.ENTITY_TYPES.getKey(bossType.getEntityType()));
+            entityTypes.add(BuiltInRegistries.ENTITY_TYPE.getKey(bossType.getEntityType()));
+            BrutalBosses.LOGGER.info("Loaded boss variant for: " + BuiltInRegistries.ENTITY_TYPE.getKey(bossType.getEntityType()));
 
             for (final Map.Entry<ResourceLocation, Integer> spawnEntry : bossType.getSpawnTables().entrySet())
             {
@@ -183,23 +176,15 @@ public class BossTypeManager
 
         this.entityTypes = entityTypes.build();
 
-        final ImmutableMap.Builder<ResourceLocation, List<BossType>> spawnMap = ImmutableMap.<ResourceLocation, List<BossType>>builder();
+        final ImmutableMap.Builder<ResourceLocation, List<BossType>> spawnMap = ImmutableMap.builder();
         for (final Map.Entry<ResourceLocation, List<BossType>> entry : tempSpawns.entrySet())
         {
-            final ImmutableList.Builder<BossType> bossList = ImmutableList.<BossType>builder();
+            final ImmutableList.Builder<BossType> bossList = ImmutableList.builder();
             bossList.addAll(entry.getValue());
             spawnMap.put(entry.getKey(), bossList.build());
         }
 
         this.lootTableSpawnEntries = spawnMap.build();
-    }
-
-    /**
-     * Registers the capability manager
-     */
-    public void register(RegisterCapabilitiesEvent event)
-    {
-        event.register(BossCapability.class);
     }
 
     /**
@@ -210,7 +195,7 @@ public class BossTypeManager
      */
     public boolean isValidBossEntity(final Entity entity)
     {
-        return entityTypes.contains(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()));
+        return entityTypes.contains(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
     }
 
     /**

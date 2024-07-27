@@ -2,7 +2,9 @@ package com.brutalbosses.entity.ai;
 
 import com.brutalbosses.BrutalBosses;
 import com.google.gson.JsonObject;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -15,7 +17,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.List;
  */
 public class WhirlWind extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:whirlwind");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:whirlwind");
 
     private final Mob              mob;
     private       LivingEntity     target = null;
@@ -136,9 +137,9 @@ public class WhirlWind extends Goal
 
     public static class WhirldWindParams extends IAIParams.DefaultParams
     {
-        private float     attackDistance = 4f;
-        private float     extraDamage    = 2f;
-        private MobEffect onHitMobEffect = null;
+        private float             attackDistance = 4f;
+        private float             extraDamage    = 2f;
+        private Holder<MobEffect> onHitMobEffect = null;
         private float     knockback      = 4f;
         private int       cooldown       = 80;
         private int       potionlevel    = 1;
@@ -202,8 +203,8 @@ public class WhirlWind extends Goal
 
             if (jsonElement.has(POTION))
             {
-                final ResourceLocation MobEffectID = new ResourceLocation(jsonElement.get(POTION).getAsString());
-                onHitMobEffect = ForgeRegistries.MOB_EFFECTS.getValue(MobEffectID);
+                final ResourceLocation MobEffectID = ResourceLocation.tryParse(jsonElement.get(POTION).getAsString());
+                onHitMobEffect = BuiltInRegistries.MOB_EFFECT.getHolder(MobEffectID).get();
             }
 
             return this;

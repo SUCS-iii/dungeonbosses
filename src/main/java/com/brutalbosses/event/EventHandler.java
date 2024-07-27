@@ -4,6 +4,7 @@ import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.BossJsonListener;
 import com.brutalbosses.entity.BossTypeManager;
 import com.brutalbosses.entity.CustomAttributes;
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import com.brutalbosses.network.BossCapMessage;
 import com.brutalbosses.network.BossOverlayMessage;
@@ -11,6 +12,7 @@ import com.brutalbosses.network.BossTypeSyncMessage;
 import com.brutalbosses.network.Network;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -30,16 +32,15 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.living.LivingConversionEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.entity.living.LivingConversionEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +73,7 @@ public class EventHandler
     public static Map<BlockPos, UUID> protectedBlocks = new HashMap<>();
 
     @SubscribeEvent
-    public static void onPlayerInteract(final PlayerInteractEvent event)
+    public static void onPlayerInteract(final PlayerInteractEvent.EntityInteract event)
     {
         if (event.getLevel().isClientSide())
         {
@@ -105,11 +106,11 @@ public class EventHandler
     }
 
     @SubscribeEvent
-    public static void applyProjectileDamageBoost(final LivingHurtEvent event)
+    public static void applyProjectileDamageBoost(final LivingDamageEvent.Pre event)
     {
-        if (event.getSource().getEntity() instanceof Player && event.getEntity() instanceof Mob)
+        if (event.getSource().getEntity() instanceof Player && event.getEntity() instanceof BossCapEntity bossCapEntity)
         {
-            final BossCapability cap = event.getEntity().getCapability(BossCapability.BOSS_CAP).orElse(null);
+            final BossCapability cap = bossCapEntity.getBossCap();
             if (cap != null && cap.isBoss())
             {
                 Network.instance.sendPacket((ServerPlayer) event.getSource().getEntity(), new BossOverlayMessage(event.getEntity().getId()));
@@ -117,12 +118,12 @@ public class EventHandler
             return;
         }
 
-        if (event.getSource().is(DamageTypes.THROWN) && event.getSource().getEntity() != null)
+        if (event.getSource().is(DamageTypes.THROWN) && event.getSource().getEntity() instanceof BossCapEntity bossCapEntity)
         {
-            final BossCapability cap = event.getSource().getEntity().getCapability(BossCapability.BOSS_CAP).orElse(null);
+            final BossCapability cap = bossCapEntity.getBossCap();
             if (cap != null && cap.isBoss())
             {
-                event.setAmount((float) ((event.getAmount() + cap.getBossType().getCustomAttributeValueOrDefault(CustomAttributes.PROJECTILE_DAMAGE, 0))
+                event.setNewDamage((float) ((event.getNewDamage() + cap.getBossType().getCustomAttributeValueOrDefault(CustomAttributes.PROJECTILE_DAMAGE, 0))
                                            * BrutalBosses.config.getCommonConfig().globalDifficultyMultiplier));
             }
         }
@@ -149,9 +150,9 @@ public class EventHandler
     @SubscribeEvent
     public static void onBossDeath(final LivingDeathEvent event)
     {
-        if (!event.getEntity().level().isClientSide() && event.getSource().getEntity() instanceof ServerPlayer)
+        if (!event.getEntity().level().isClientSide() && event.getSource().getEntity() instanceof ServerPlayer && event.getEntity() instanceof BossCapEntity bossCapEntity)
         {
-            final BossCapability cap = event.getEntity().getCapability(BossCapability.BOSS_CAP).orElse(null);
+            final BossCapability cap = bossCapEntity.getBossCap();
             if (cap != null && cap.isBoss())
             {
                 int exp = cap.getBossType().getExperienceDrop();
@@ -183,7 +184,7 @@ public class EventHandler
                       .withParameter(LootContextParams.THIS_ENTITY, event.getSource().getEntity())
                       .withLuck(((ServerPlayer) event.getSource().getEntity()).getLuck()).create(LootContextParamSets.CHEST);
 
-                    final LootTable loottable = event.getEntity().level().getServer().getLootData().getLootTable(cap.getLootTable());
+                    final LootTable loottable = event.getEntity().level().getServer().reloadableRegistries().get().registry(Registries.LOOT_TABLE).get().get(cap.getLootTable());
                     final List<ItemStack> list = loottable.getRandomItems(params);
 
                     if (list.isEmpty())
@@ -204,21 +205,6 @@ public class EventHandler
     }
 
     @SubscribeEvent
-    public static void attachCapabilities(final AttachCapabilitiesEvent<Entity> evt)
-    {
-        final Entity entity = evt.getObject();
-        if (entity == null || entity.level() == null)
-        {
-            return;
-        }
-
-        if (entity.level().isClientSide || BossTypeManager.instance.isValidBossEntity(entity))
-        {
-            evt.addCapability(BossCapability.ID, new BossCapability(entity));
-        }
-    }
-
-    @SubscribeEvent
     public static void onAddReloadListenerEvent(final AddReloadListenerEvent event)
     {
         event.addListener(BossJsonListener.instance);
@@ -230,9 +216,9 @@ public class EventHandler
         final Entity entity = event.getTarget();
         final Player Player = event.getEntity();
 
-        if (Player instanceof ServerPlayer)
+        if (Player instanceof ServerPlayer && entity instanceof BossCapEntity bossCapEntity)
         {
-            final BossCapability bossCapability = entity.getCapability(BossCapability.BOSS_CAP).orElse(null);
+            final BossCapability bossCapability = bossCapEntity.getBossCap();
             if (bossCapability != null && bossCapability.isBoss())
             {
                 Network.instance.sendPacket((ServerPlayer) Player, new BossCapMessage(bossCapability));
@@ -243,20 +229,9 @@ public class EventHandler
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event)
     {
-        DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> () ->
+        if (!event.getEntity().level.isClientSide && FMLEnvironment.dist == Dist.DEDICATED_SERVER)
         {
             Network.instance.sendPacket((ServerPlayer) event.getEntity(), new BossTypeSyncMessage(BossTypeManager.instance.bosses.values()));
-        });
-    }
-
-    @SubscribeEvent
-    public static void onEntityConversion(LivingConversionEvent.Pre event)
-    {
-        final BossCapability bossCapability = event.getEntity().getCapability(BossCapability.BOSS_CAP).orElse(null);
-        if (bossCapability != null && bossCapability.isBoss())
-        {
-            event.setCanceled(true);
-            event.setConversionTimer(20);
         }
     }
 }

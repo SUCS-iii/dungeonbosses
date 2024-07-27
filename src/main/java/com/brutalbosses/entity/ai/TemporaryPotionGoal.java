@@ -7,7 +7,10 @@ import com.brutalbosses.entity.thrownentity.ThrownItemEntity;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -20,7 +23,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +33,7 @@ import java.util.Map;
  */
 public class TemporaryPotionGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:temppotions");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:temppotions");
 
     private final Mob              mob;
     private       TempPotionParams params;
@@ -60,7 +62,7 @@ public class TemporaryPotionGoal extends Goal
     public void stop()
     {
         this.target = null;
-        for (final Tuple<MobEffect, Integer> potion : params.potions)
+        for (final Tuple<Holder<MobEffect>, Integer> potion : params.potions)
         {
             final MobEffectInstance MobEffectInstance = mob.getEffect(potion.getA());
             if (MobEffectInstance != null && MobEffectInstance.getDuration() < params.duration)
@@ -81,14 +83,14 @@ public class TemporaryPotionGoal extends Goal
 
         ticksToNextUpdate = (int) params.interval;
 
-        for (final Tuple<MobEffect, Integer> potion : params.potions)
+        for (final Tuple<Holder<MobEffect>, Integer> potion : params.potions)
         {
             mob.addEffect(new MobEffectInstance(potion.getA(), params.duration, potion.getB()));
         }
 
         if (params.item != null)
         {
-            final ThrownItemEntity item = ModEntities.THROWN_ITEMC.create(mob.level());
+            final ThrownItemEntity item = (ThrownItemEntity) ModEntities.THROWN_ITEMC.create(mob.level());
             item.setPos(mob.getX(), mob.getY(), mob.getZ());
             mob.level().addFreshEntity(item);
             item.startRiding(mob, true);
@@ -124,9 +126,9 @@ public class TemporaryPotionGoal extends Goal
 
     public static class TempPotionParams extends IAIParams.DefaultParams
     {
-        private int                             duration        = 100;
-        private float                           interval        = 200;
-        private List<Tuple<MobEffect, Integer>> potions         = new ArrayList<>();
+        private int                                     duration = 100;
+        private float                                   interval = 200;
+        private List<Tuple<Holder<MobEffect>, Integer>> potions  = new ArrayList<>();
         private ItemStack                       item            = null;
         private float                           visibleitemsize = 2.0f;
 
@@ -166,7 +168,8 @@ public class TemporaryPotionGoal extends Goal
             {
                 try
                 {
-                    item = ItemStack.of(TagParser.parseTag(jsonElement.get(ITEM).getAsString()));
+                    item = ItemStack.CODEC.parse(NbtOps.INSTANCE, TagParser.parseTag(jsonElement.get(ITEM).getAsString())).getOrThrow();
+                    ;
                 }
                 catch (CommandSyntaxException e)
                 {
@@ -180,7 +183,7 @@ public class TemporaryPotionGoal extends Goal
                 potions = new ArrayList<>();
                 for (Map.Entry<String, JsonElement> data : jsonElement.get(POTIONS).getAsJsonObject().entrySet())
                 {
-                    potions.add(new Tuple<>(ForgeRegistries.MOB_EFFECTS.getValue(ResourceLocation.tryParse(data.getKey())), data.getValue().getAsInt()));
+                    potions.add(new Tuple<>(BuiltInRegistries.MOB_EFFECT.getHolder(ResourceLocation.tryParse(data.getKey())).get(), data.getValue().getAsInt()));
                 }
             }
 

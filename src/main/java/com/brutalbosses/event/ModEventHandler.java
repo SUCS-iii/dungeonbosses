@@ -2,10 +2,10 @@ package com.brutalbosses.event;
 
 import com.brutalbosses.entity.ModEntities;
 import com.brutalbosses.entity.thrownentity.ThrownItemEntity;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegisterEvent;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.registries.RegisterEvent;
 
 public class ModEventHandler
 {
@@ -18,9 +18,9 @@ public class ModEventHandler
     @SubscribeEvent
     public static void registerEntities(final RegisterEvent event)
     {
-        if (event.getRegistryKey().equals(ForgeRegistries.Keys.ENTITY_TYPES))
+        if (event.getRegistryKey().equals(Registries.ENTITY_TYPE))
         {
-            event.getForgeRegistry().register(ThrownItemEntity.ID, ModEntities.THROWN_ITEMC);
+            event.register(Registries.ENTITY_TYPE, ThrownItemEntity.ID, () -> ModEntities.THROWN_ITEMC);
         }
     }
 }

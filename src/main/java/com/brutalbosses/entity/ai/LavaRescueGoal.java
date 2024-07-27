@@ -1,6 +1,7 @@
 package com.brutalbosses.entity.ai;
 
 import com.brutalbosses.entity.BossSpawnHandler;
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -11,7 +12,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 
 public class LavaRescueGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:lavarescue");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:lavarescue");
 
     int inLavaTicks = 0;
     int counter     = 0;
@@ -51,7 +52,7 @@ public class LavaRescueGoal extends Goal
                     tpPos = BossSpawnHandler.findSpawnPosForBoss((ServerLevel) entity.level(), entity, entity.blockPosition());
                     if (tpPos == null)
                     {
-                        final BossCapability cap = entity.getCapability(BossCapability.BOSS_CAP).orElse(null);
+                        final BossCapability cap = ((BossCapEntity) entity).getBossCap();
                         if (cap != null)
                         {
                             tpPos = BossSpawnHandler.findSpawnPosForBoss((ServerLevel) entity.level(), entity, cap.getSpawnPos());

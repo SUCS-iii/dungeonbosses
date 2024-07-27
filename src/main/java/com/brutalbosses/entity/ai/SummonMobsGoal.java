@@ -2,13 +2,14 @@ package com.brutalbosses.entity.ai;
 
 import com.brutalbosses.BrutalBosses;
 import com.brutalbosses.entity.BossSpawnHandler;
-import com.brutalbosses.entity.IEntityCapReader;
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
@@ -22,7 +23,6 @@ import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.monster.SpellcasterIllager;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.scores.PlayerTeam;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
 
@@ -31,7 +31,7 @@ import java.util.*;
  */
 public class SummonMobsGoal extends Goal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:summonmobs");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:summonmobs");
 
     private final Mob          mob;
     private       LivingEntity target = null;
@@ -135,19 +135,15 @@ public class SummonMobsGoal extends Goal
         try
         {
             summoned = (LivingEntity) entityType.create(mob.level());
-            if (params.entityNBTData.containsKey(ForgeRegistries.ENTITY_TYPES.getKey(entityType)))
+            if (params.entityNBTData.containsKey(BuiltInRegistries.ENTITY_TYPE.getKey(entityType)))
             {
-                final CompoundTag nbt = params.entityNBTData.get(ForgeRegistries.ENTITY_TYPES.getKey(entityType));
+                final CompoundTag nbt = params.entityNBTData.get(BuiltInRegistries.ENTITY_TYPE.getKey(entityType));
                 if (nbt.contains("Pos"))
                 {
                     summoned.load(nbt);
                 }
                 else
                 {
-                    if (nbt.contains("ForgeCaps", 10) && summoned instanceof IEntityCapReader)
-                    {
-                        ((IEntityCapReader) summoned).readCapsFrom(nbt.getCompound("ForgeCaps"));
-                    }
                     summoned.readAdditionalSaveData(nbt);
                 }
                 summoned.setUUID(UUID.randomUUID());
@@ -162,13 +158,13 @@ public class SummonMobsGoal extends Goal
         }
         catch (Exception e)
         {
-            final BossCapability bossCapability = mob.getCapability(BossCapability.BOSS_CAP).orElse(null);
+            final BossCapability bossCapability = ((BossCapEntity) mob).getBossCap();
             if (bossCapability != null)
             {
                 BrutalBosses.LOGGER.warn("Failed summoning add for boss:" + bossCapability.getBossType().getID(), e);
                 return;
             }
-            BrutalBosses.LOGGER.warn("Failed summoning addfor boss:", e);
+            BrutalBosses.LOGGER.warn("Failed summoning add for boss:", e);
             return;
         }
 
@@ -238,8 +234,8 @@ public class SummonMobsGoal extends Goal
 
             for (JsonElement entityEntry : jsonElement.get(ENTITIES).getAsJsonArray())
             {
-                final ResourceLocation entityID = new ResourceLocation(((JsonObject) entityEntry).get(ENTITY_ID).getAsString());
-                types.add((EntityType<? extends LivingEntity>) ForgeRegistries.ENTITY_TYPES.getValue(entityID));
+                final ResourceLocation entityID = ResourceLocation.tryParse(((JsonObject) entityEntry).get(ENTITY_ID).getAsString());
+                types.add((EntityType<? extends LivingEntity>) BuiltInRegistries.ENTITY_TYPE.get(entityID));
                 if (((JsonObject) entityEntry).has(SUMM_ENTITY_NBT))
                 {
                     try
@@ -254,7 +250,6 @@ public class SummonMobsGoal extends Goal
             }
             entityIDs = types;
             entityNBTData = entityData;
-
 
             if (jsonElement.has(SUMM_INTERVAL))
             {

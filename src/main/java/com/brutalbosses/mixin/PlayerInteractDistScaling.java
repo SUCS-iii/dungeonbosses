@@ -1,35 +1,23 @@
 package com.brutalbosses.mixin;
 
+import com.brutalbosses.entity.capability.BossCapEntity;
 import com.brutalbosses.entity.capability.BossCapability;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.common.extensions.IForgePlayer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(IForgePlayer.class)
-public interface PlayerInteractDistScaling
+@Mixin(Entity.class)
+public abstract class PlayerInteractDistScaling
 {
-    @Shadow(remap = false)
-    public abstract boolean isCloseEnough(final Entity entity, final double dist);
-
-    @Shadow(remap = false)
-    public abstract double getEntityReach();
-
-    /**
-     * @param entity
-     * @param padding
-     * @return
-     */
-    @Overwrite(remap = false)
-    default boolean canReach(Entity entity, double padding)
+    @Inject(method = "getPickRadius", at = @At("HEAD"), cancellable = true)
+    public void canReach(final CallbackInfoReturnable<Float> cir)
     {
-        final BossCapability cap = entity.getCapability(BossCapability.BOSS_CAP).orElse(null);
-
-        if (cap != null && cap.isBoss())
+        final BossCapability cap = ((BossCapEntity) this).getBossCap();
+        if (cap != null && cap.isBoss() && cap.getBossType().getVisualScale() > 1.0f)
         {
-            return isCloseEnough(entity, getEntityReach() * cap.getBossType().getVisualScale() + padding);
+            cir.setReturnValue(cap.getBossType().getVisualScale() + 2);
         }
-        return isCloseEnough(entity, getEntityReach() + padding);
     }
 }

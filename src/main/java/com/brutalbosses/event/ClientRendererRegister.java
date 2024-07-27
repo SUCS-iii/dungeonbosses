@@ -3,8 +3,8 @@ package com.brutalbosses.event;
 import com.brutalbosses.entity.ModEntities;
 import com.brutalbosses.entity.thrownentity.CSpriteRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 public class ClientRendererRegister
 {

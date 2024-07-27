@@ -12,11 +12,9 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.phys.EntityHitResult;
 
-import javax.annotation.Nullable;
-
 public class SnowballAttackGoal extends SimpleRangedAttackGoal
 {
-    public static final ResourceLocation ID = new ResourceLocation("brutalbosses:shootsnowballs");
+    public static final ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:shootsnowballs");
 
     private static final double AIM_HEIGHT                     = 2.0D;
     private static final double ARROW_SPEED                    = 1.0D;
@@ -43,7 +41,7 @@ public class SnowballAttackGoal extends SimpleRangedAttackGoal
     }
 
     @Override
-    protected void doRangedAttack(@Nullable final Projectile snowballentity, final LivingEntity target)
+    protected void doRangedAttack(final Projectile snowballentity, final LivingEntity target)
     {
         snowballentity.noPhysics = false;
         snowballentity.setNoGravity(false);

@@ -19,7 +19,7 @@ import net.minecraft.world.phys.EntityHitResult;
 
 public class SpitCobwebGoal extends SimpleRangedAttackGoal
 {
-    public static ResourceLocation ID = new ResourceLocation("brutalbosses:spitcobweb");
+    public static ResourceLocation ID = ResourceLocation.tryParse("brutalbosses:spitcobweb");
 
     public SpitCobwebGoal(final Mob mob, final IAIParams params)
     {
