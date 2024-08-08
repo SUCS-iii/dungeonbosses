@@ -14,10 +14,13 @@ public abstract class PlayerInteractDistScaling
     @Inject(method = "getPickRadius", at = @At("HEAD"), cancellable = true)
     public void canReach(final CallbackInfoReturnable<Float> cir)
     {
-        final BossCapability cap = ((BossCapEntity) this).getBossCap();
-        if (cap != null && cap.isBoss() && cap.getBossType().getVisualScale() > 1.0f)
+        if (this instanceof BossCapEntity bossCapEntity)
         {
-            cir.setReturnValue(cap.getBossType().getVisualScale() + 2);
+            final BossCapability cap = bossCapEntity.getBossCap();
+            if (cap != null && cap.isBoss() && cap.getBossType().getVisualScale() > 1.0f)
+            {
+                cir.setReturnValue(cap.getBossType().getVisualScale() + 2);
+            }
         }
     }
 }
