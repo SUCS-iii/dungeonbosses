@@ -1,6 +1,6 @@
 {
-  "entity": "minecraft:wandering_trader",
-  "name": "Agizahr the Archmage",
+  "entity": "brazil_legends:mapinguari",
+  "name": "TESTE",
   "visualscale": 0.7,
   "experience": 300,
   "protect_treasure": true,
@@ -12,7 +12,7 @@
     "minecraft:fire_resistance": 1
   },
   "attributes": {
-    "generic.max_health": 70,
+    "generic.max_health": 700,
     "generic.follow_range": 80,
     "generic.knockback_resistance": 1
   },
